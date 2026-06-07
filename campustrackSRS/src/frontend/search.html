@@ -1,0 +1,402 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Search Listings — CampusTrack</title>
+  <link rel="stylesheet" href="/css/style.css">
+  <style>
+    /* Details Modal styling */
+    .modal-backdrop {
+      position: fixed;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background: rgba(0, 0, 0, 0.7);
+      backdrop-filter: blur(8px);
+      z-index: 500;
+      display: none;
+      align-items: center;
+      justify-content: center;
+      padding: 24px;
+    }
+    
+    .modal-content {
+      max-width: 800px;
+      width: 100%;
+      max-height: 90vh;
+      overflow-y: auto;
+      position: relative;
+    }
+
+    .modal-close {
+      position: absolute;
+      top: 16px;
+      right: 24px;
+      background: transparent;
+      border: none;
+      color: var(--text-secondary);
+      font-size: 2rem;
+      cursor: pointer;
+      z-index: 10;
+      transition: var(--transition-fast);
+    }
+
+    .modal-close:hover {
+      color: #fff;
+    }
+  </style>
+</head>
+<body>
+
+  <div id="navbar-container"></div>
+
+  <div class="container animate-fade-in">
+    <div class="section-header">
+      <h1 class="section-title">Search Campus Postings</h1>
+      <p style="color: var(--text-secondary);">Browse reported lost and found items at Addis Ababa University</p>
+    </div>
+
+    <!-- Filter Control Panel -->
+    <div class="search-panel glass-panel mb-4">
+      <form id="search-form">
+        <div class="search-grid">
+          <div class="form-group" style="margin-bottom:0;">
+            <label class="form-label" for="search-input">Search Keywords</label>
+            <input type="text" id="search-input" class="form-control" placeholder="e.g. key, ID card, backpack, laptop">
+          </div>
+          
+          <div class="form-group" style="margin-bottom:0;">
+            <label class="form-label" for="filter-type">Type</label>
+            <select id="filter-type" class="form-control">
+              <option value="all">All Types</option>
+              <option value="lost">Lost</option>
+              <option value="found">Found</option>
+            </select>
+          </div>
+
+          <div class="form-group" style="margin-bottom:0;">
+            <label class="form-label" for="filter-category">Category</label>
+            <select id="filter-category" class="form-control">
+              <option value="all">All Categories</option>
+              <!-- Populated dynamically -->
+            </select>
+          </div>
+
+          <div class="form-group" style="margin-bottom:0;">
+            <label class="form-label" for="filter-status">Status</label>
+            <select id="filter-status" class="form-control">
+              <option value="active" selected>Active</option>
+              <option value="claimed">Claimed</option>
+              <option value="closed">Closed</option>
+              <option value="all">All</option>
+            </select>
+          </div>
+        </div>
+
+        <div class="search-grid mt-2">
+          <div class="form-group" style="margin-bottom:0;">
+            <label class="form-label" for="filter-location">Location</label>
+            <input type="text" id="filter-location" class="form-control" placeholder="e.g. Block 4, Library">
+          </div>
+
+          <div class="form-group" style="margin-bottom:0;">
+            <label class="form-label" for="filter-start-date">From Date</label>
+            <input type="date" id="filter-start-date" class="form-control">
+          </div>
+
+          <div class="form-group" style="margin-bottom:0;">
+            <label class="form-label" for="filter-end-date">To Date</label>
+            <input type="date" id="filter-end-date" class="form-control">
+          </div>
+
+          <button type="submit" class="btn btn-primary" style="width: 100%;"><span class="ico-search"></span>Search</button>
+        </div>
+      </form>
+    </div>
+
+    <!-- Search Results Grid -->
+    <div class="listings-grid" id="search-results">
+      <div style="grid-column: 1/-1; text-align: center; padding: 4rem; color: var(--text-muted);">
+        Use the filters above to search items.
+      </div>
+    </div>
+  </div>
+
+  <!-- Detail Modal -->
+  <div class="modal-backdrop" id="detail-modal">
+    <div class="modal-content glass-panel animate-fade-in" style="animation-duration: 0.3s;">
+      <button class="modal-close" id="close-modal">&times;</button>
+      <div id="modal-details-body">
+        <!-- Rendered dynamically -->
+      </div>
+    </div>
+  </div>
+
+  <footer>
+    <p>&copy; 2026 CampusTrack — Addis Ababa University. All rights reserved.</p>
+  </footer>
+
+  <script src="/js/api.js"></script>
+  <script>
+    // Load Categories dynamic select menu
+    async function loadCategories() {
+      try {
+        const categories = await apiCall('/items/categories');
+        const select = document.getElementById('filter-category');
+        categories.forEach(cat => {
+          const opt = document.createElement('option');
+          opt.value = cat.id;
+          opt.textContent = cat.name;
+          select.appendChild(opt);
+        });
+      } catch (err) {
+        showToast('Failed to load categories.', 'error');
+      }
+    }
+
+    // Load items based on filters
+    async function executeSearch() {
+      const q = document.getElementById('search-input').value;
+      const type = document.getElementById('filter-type').value;
+      const category_id = document.getElementById('filter-category').value;
+      const status = document.getElementById('filter-status').value;
+      const location = document.getElementById('filter-location').value;
+      const start_date = document.getElementById('filter-start-date').value;
+      const end_date = document.getElementById('filter-end-date').value;
+
+      let queryParams = [];
+      if (q) queryParams.push(`q=${encodeURIComponent(q)}`);
+      if (type !== 'all') queryParams.push(`type=${type}`);
+      if (category_id !== 'all') queryParams.push(`category_id=${category_id}`);
+      if (status !== 'all') queryParams.push(`status=${status}`);
+      if (location) queryParams.push(`location=${encodeURIComponent(location)}`);
+      if (start_date) queryParams.push(`start_date=${start_date}`);
+      if (end_date) queryParams.push(`end_date=${end_date}`);
+
+      const queryString = queryParams.length > 0 ? `?${queryParams.join('&')}` : '';
+
+      const resultsContainer = document.getElementById('search-results');
+      resultsContainer.innerHTML = '<div style="grid-column:1/-1; text-align:center; padding:4rem; color:var(--text-secondary);">Querying database...</div>';
+
+      try {
+        const items = await apiCall(`/items${queryString}`);
+        resultsContainer.innerHTML = '';
+
+        if (!items || items.length === 0) {
+          resultsContainer.innerHTML = `
+            <div style="grid-column: 1/-1; text-align: center; padding: 4rem; color: var(--text-muted);" class="glass-panel">
+              <h3>No matching results found</h3>
+              <p style="margin-top:8px;">Try broadening your keyword, category, or location parameters.</p>
+            </div>
+          `;
+          return;
+        }
+
+        items.forEach(item => {
+          const card = document.createElement('div');
+          card.className = 'item-card glass-panel';
+          card.style.cursor = 'pointer';
+          
+          const badgeClass = item.type === 'lost' ? 'badge-lost' : 'badge-found';
+          const statusClass = item.status === 'active' ? 'status-active' : (item.status === 'claimed' ? 'status-claimed' : 'status-closed');
+          
+          const imgHtml = item.image_url 
+            ? `<img src="${item.image_url}" alt="${item.title}" class="item-card-image">`
+            : `<div class="item-card-image-placeholder">
+                <span>📷</span>
+                <span>No Photo Provided</span>
+               </div>`;
+
+          card.innerHTML = `
+            <span class="item-badge-type ${badgeClass}">${item.type}</span>
+            ${imgHtml}
+            <div class="item-card-body">
+              <div class="d-flex justify-between align-center mb-1">
+                <span class="item-card-category">${item.category_name}</span>
+                <span class="item-status-badge ${statusClass}">${item.status}</span>
+              </div>
+              <h3 class="item-card-title">${item.title}</h3>
+              <p class="item-card-desc">${item.description || 'No description provided.'}</p>
+              <div class="item-card-meta">
+                <div><span class="ico-location"></span> ${item.location || 'Unknown location'}</div>
+                <div><span class="ico-calendar"></span> ${formatDate(item.item_date)}</div>
+              </div>
+            </div>
+          `;
+          
+          card.addEventListener('click', () => {
+            openItemDetails(item.id);
+          });
+
+          resultsContainer.appendChild(card);
+        });
+
+      } catch (err) {
+        showToast('Failed to execute search query.', 'error');
+        resultsContainer.innerHTML = '<div style="grid-column:1/-1; text-align:center; padding:4rem; color:red;">An error occurred while loading results.</div>';
+      }
+    }
+
+    // Fetch single item detail and open modal window
+    async function openItemDetails(itemId) {
+      const modal = document.getElementById('detail-modal');
+      const body = document.getElementById('modal-details-body');
+      body.innerHTML = '<div style="padding:4rem; text-align:center; color:var(--text-secondary);">Retrieving item details...</div>';
+      modal.style.display = 'flex';
+
+      try {
+        const item = await apiCall(`/items/${itemId}`);
+        const statusClass = item.status === 'active' ? 'status-active' : (item.status === 'claimed' ? 'status-claimed' : 'status-closed');
+        const badgeClass = item.type === 'lost' ? 'badge-lost' : 'badge-found';
+
+        const imgHtml = item.image_url 
+          ? `<div class="detail-image-box"><img src="${item.image_url}" alt="${item.title}" class="detail-image"></div>`
+          : `<div class="item-card-image-placeholder" style="height: 350px; border-radius: var(--radius-lg);">
+              <span style="font-size: 3rem;">📷</span>
+              <span>No Image Available</span>
+             </div>`;
+
+        // Render contact information privacy logic
+        const auth = isAuthenticated();
+        let contactHtml = '';
+        if (auth) {
+          contactHtml = `
+            <div class="glass-panel" style="padding: 1.5rem; border-color: rgba(99,102,241,0.2); background: rgba(99,102,241,0.02); margin-top: 1.5rem;">
+              <h4 style="margin-bottom: 8px; font-family: var(--font-display); font-weight: 700; color: #fff;">📞 Contact Information</h4>
+              <p style="font-size:0.95rem; color: var(--text-secondary); margin-bottom: 6px;">Reported by: <strong>${item.reporter_name}</strong></p>
+              <p style="font-size:0.95rem;">Email Address: <a href="mailto:${item.reporter_email}" style="color: var(--accent-cyan); font-weight:600;">${item.reporter_email}</a></p>
+              <p style="font-size:0.8rem; color: var(--text-muted); margin-top: 8px;">Please reach out to arrange safe handover in a public campus space.</p>
+            </div>
+          `;
+        } else {
+          contactHtml = `
+            <div class="glass-panel" style="padding: 1.5rem; border-color: rgba(239,68,68,0.2); background: rgba(239,68,68,0.02); margin-top: 1.5rem; text-align: center;">
+              <h4 style="margin-bottom: 8px; color: #f87171;">🚫 Contact Details Locked</h4>
+              <p style="font-size:0.88rem; color: var(--text-secondary); margin-bottom: 12px;">Only logged in students and staff can view reporter details.</p>
+              <a href="/login.html" class="btn btn-secondary" style="padding:0.4rem 1.2rem; font-size:0.8rem;">Login to View Contacts</a>
+            </div>
+          `;
+        }
+
+        // Render status toggle buttons if user is the OWNER or an ADMIN
+        const currentUser = getUser();
+        let actionButtonsHtml = '';
+        if (currentUser && (currentUser.id === item.user_id || currentUser.role === 'admin')) {
+          actionButtonsHtml = `
+            <div class="glass-panel" style="padding: 1.5rem; margin-top: 1.5rem; border-color: var(--glass-border);">
+              <h4 style="margin-bottom: 12px; font-family: var(--font-display); font-weight:700;">⚙️ Manage Your Posting</h4>
+              <div class="hero-actions" style="justify-content: flex-start; gap: 12px;">
+                ${item.status !== 'claimed' ? `<button class="btn btn-primary" onclick="changeStatus(${item.id}, 'claimed')" style="padding: 0.5rem 1rem; font-size: 0.85rem;"><span class="ico-check"></span>Mark Claimed</button>` : ''}
+                ${item.status !== 'closed' ? `<button class="btn btn-outline" onclick="changeStatus(${item.id}, 'closed')" style="padding: 0.5rem 1rem; font-size: 0.85rem;">Close Report</button>` : ''}
+                <button class="btn btn-danger" onclick="deletePosting(${item.id})" style="padding: 0.5rem 1rem; font-size: 0.85rem;"><span class="ico-trash"></span>Delete</button>
+              </div>
+            </div>
+          `;
+        }
+
+        body.innerHTML = `
+          <div class="detail-layout" style="padding: 2.5rem;">
+            ${imgHtml}
+            <div class="detail-info" style="padding: 0;">
+              <span class="item-badge-type ${badgeClass}" style="position:static; display:inline-block; margin-bottom: 12px;">${item.type}</span>
+              <h2 class="detail-title">${item.title}</h2>
+              <span class="detail-category-badge">${item.category_name}</span>
+              
+              <table class="detail-meta-table">
+                <tr>
+                  <td>Status</td>
+                  <td><span class="item-status-badge ${statusClass}">${item.status}</span></td>
+                </tr>
+                <tr>
+                  <td>Location</td>
+                  <td>${item.location || 'Unknown'}</td>
+                </tr>
+                <tr>
+                  <td>Date</td>
+                  <td>${formatDate(item.item_date)}</td>
+                </tr>
+                <tr>
+                  <td>Posted</td>
+                  <td>${formatDate(item.created_at)}</td>
+                </tr>
+              </table>
+
+              <p class="form-label" style="margin-bottom: 4px;">Item Description</p>
+              <div class="detail-desc" style="margin-top:0;">${item.description || 'No description provided.'}</div>
+
+              ${contactHtml}
+              ${actionButtonsHtml}
+            </div>
+          </div>
+        `;
+
+      } catch (err) {
+        body.innerHTML = `<div style="padding:4rem; text-align:center; color:red;">Failed to retrieve details: ${err.message}</div>`;
+      }
+    }
+
+    // Action handlers from detail modal
+    async function changeStatus(itemId, newStatus) {
+      if (!confirm(`Are you sure you want to mark this item as "${newStatus}"?`)) return;
+      try {
+        await apiCall(`/items/${itemId}/status`, {
+          method: 'PUT',
+          body: { status: newStatus }
+        });
+        showToast(`Item status changed to ${newStatus}.`, 'success');
+        document.getElementById('detail-modal').style.display = 'none';
+        executeSearch(); // reload page listings
+      } catch (err) {
+        showToast(err.message, 'error');
+      }
+    }
+
+    async function deletePosting(itemId) {
+      if (!confirm('Are you sure you want to delete this posting? This action is irreversible.')) return;
+      try {
+        await apiCall(`/items/${itemId}`, { method: 'DELETE' });
+        showToast('Posting deleted successfully.', 'success');
+        document.getElementById('detail-modal').style.display = 'none';
+        executeSearch();
+      } catch (err) {
+        showToast(err.message, 'error');
+      }
+    }
+
+    // Modal Closing operations
+    document.getElementById('close-modal').addEventListener('click', () => {
+      document.getElementById('detail-modal').style.display = 'none';
+    });
+
+    window.addEventListener('click', (e) => {
+      const modal = document.getElementById('detail-modal');
+      if (e.target === modal) {
+        modal.style.display = 'none';
+      }
+    });
+
+    // Form search action
+    const searchForm = document.getElementById('search-form');
+    searchForm.addEventListener('submit', (e) => {
+      e.preventDefault();
+      executeSearch();
+    });
+
+    document.addEventListener('DOMContentLoaded', () => {
+      loadCategories();
+      
+      // Check if item id parameter exists in URL to auto-open modal details
+      const urlParams = new URLSearchParams(window.location.search);
+      const autoItemId = urlParams.get('id');
+      
+      executeSearch();
+
+      if (autoItemId) {
+        setTimeout(() => openItemDetails(autoItemId), 300);
+      }
+    });
+  </script>
+</body>
+</html>

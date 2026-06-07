@@ -1,0 +1,313 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>User Dashboard — CampusTrack</title>
+  <link rel="stylesheet" href="/css/style.css">
+</head>
+<body>
+
+  <div id="navbar-container"></div>
+
+  <div class="container animate-fade-in">
+    <div class="dashboard-layout">
+      
+      <!-- Sidebar Profile & Menu -->
+      <aside class="dashboard-sidebar glass-panel">
+        <div class="sidebar-profile">
+          <div class="profile-avatar" id="user-avatar">U</div>
+          <h3 class="profile-name" id="user-fullname">Loading User...</h3>
+          <span class="profile-role" id="user-role">Student</span>
+          <p style="font-size:0.75rem; color: var(--text-muted); margin-top:4px;" id="user-email">email@aau.edu.et</p>
+        </div>
+
+        <ul class="sidebar-menu">
+          <li>
+            <button class="sidebar-menu-btn active" id="btn-show-posts">
+              📁 My Postings
+            </button>
+          </li>
+          <li>
+            <button class="sidebar-menu-btn" id="btn-show-notifs">
+              🔔 Notifications <span id="notif-badge" style="background:#8b5cf6; color:#fff; font-size:0.75rem; padding: 2px 8px; border-radius:10px; margin-left:auto; display:none;">0</span>
+            </button>
+          </li>
+          <li>
+            <a href="/post-item.html" class="btn btn-primary mt-2" style="width: 100%; font-size: 0.88rem; padding:0.6rem;">
+              <span class="ico-plus"></span>Report Lost/Found
+            </a>
+          </li>
+        </ul>
+      </aside>
+
+      <!-- Main Dashboard workspace panel -->
+      <main class="dashboard-main-content">
+        
+        <!-- Tab 1: Personal Postings -->
+        <section id="pane-posts" class="glass-panel p-4" style="padding: 2.5rem;">
+          <h2 class="section-title mb-3" style="font-size:1.5rem;">My Reported Postings</h2>
+          <div class="custom-table-wrapper">
+            <table class="custom-table" id="posts-table">
+              <thead>
+                <tr>
+                  <th>Item Details</th>
+                  <th>Type</th>
+                  <th>Date</th>
+                  <th>Location</th>
+                  <th>Status</th>
+                  <th style="text-align:right;">Actions</th>
+                </tr>
+              </thead>
+              <tbody id="posts-list">
+                <tr>
+                  <td colspan="6" style="text-align:center; padding:3rem; color:var(--text-muted);">
+                    Loading your reports...
+                  </td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </section>
+
+        <!-- Tab 2: Notifications List -->
+        <section id="pane-notifs" class="glass-panel p-4" style="padding: 2.5rem; display:none;">
+          <div class="section-header" style="margin-bottom: 1.5rem;">
+            <h2 class="section-title" style="font-size:1.5rem;">System Notifications</h2>
+            <button class="btn btn-secondary" id="btn-mark-all-read" style="padding: 0.4rem 1rem; font-size: 0.8rem;">Mark All as Read</button>
+          </div>
+          
+          <div id="notifications-list">
+            <!-- Notifications cards will be populated here -->
+            <div style="text-align:center; padding:3rem; color:var(--text-muted);">
+              Loading notification logs...
+            </div>
+          </div>
+        </section>
+
+      </main>
+
+    </div>
+  </div>
+
+  <footer>
+    <p>&copy; 2026 CampusTrack — Addis Ababa University. All rights reserved.</p>
+  </footer>
+
+  <script src="/js/api.js"></script>
+  <script>
+    // Guard authentication
+    if (!isAuthenticated()) {
+      showToast('Session expired or access unauthorized.', 'error');
+      window.location.href = '/login.html';
+    }
+
+    // Tab pane toggles
+    const btnPosts = document.getElementById('btn-show-posts');
+    const btnNotifs = document.getElementById('btn-show-notifs');
+    const panePosts = document.getElementById('pane-posts');
+    const paneNotifs = document.getElementById('pane-notifs');
+
+    btnPosts.addEventListener('click', () => {
+      btnPosts.classList.add('active');
+      btnNotifs.classList.remove('active');
+      panePosts.style.display = 'block';
+      paneNotifs.style.display = 'none';
+      loadUserPostings();
+    });
+
+    btnNotifs.addEventListener('click', () => {
+      btnNotifs.classList.add('active');
+      btnPosts.classList.remove('active');
+      panePosts.style.display = 'none';
+      paneNotifs.style.display = 'block';
+      loadNotifications();
+    });
+
+    // Populate profile sidebar
+    function loadProfile() {
+      const user = getUser();
+      if (user) {
+        document.getElementById('user-fullname').textContent = user.full_name;
+        document.getElementById('user-role').textContent = user.role === 'admin' ? 'Administrator' : 'Student/Staff';
+        document.getElementById('user-email').textContent = user.email;
+        document.getElementById('user-avatar').textContent = user.full_name.charAt(0).toUpperCase();
+      }
+    }
+
+    // Load personal reports
+    async function loadUserPostings() {
+      const listContainer = document.getElementById('posts-list');
+      try {
+        const items = await apiCall('/items/my');
+        listContainer.innerHTML = '';
+
+        if (!items || items.length === 0) {
+          listContainer.innerHTML = `
+            <tr>
+              <td colspan="6" style="text-align:center; padding:4rem; color:var(--text-muted);">
+                <p style="font-size:1.1rem; margin-bottom:8px;">You haven't reported any items yet.</p>
+                <p style="font-size:0.88rem;">Need to declare a lost/found property? Click 'Report' to start.</p>
+              </td>
+            </tr>
+          `;
+          return;
+        }
+
+        items.forEach(item => {
+          const row = document.createElement('tr');
+          const typeBadge = item.type === 'lost' ? 'badge-lost' : 'badge-found';
+          const statusClass = item.status === 'active' ? 'status-active' : (item.status === 'claimed' ? 'status-claimed' : 'status-closed');
+
+          row.innerHTML = `
+            <td>
+              <div class="d-flex align-center gap-2">
+                ${item.image_url ? `<img src="${item.image_url}" style="width:40px; height:40px; object-fit:cover; border-radius:4px; border:1px solid var(--glass-border);">` : `<div style="width:40px; height:40px; display:flex; align-items:center; justify-content:center; background:rgba(255,255,255,0.05); border-radius:4px; font-size:1.2rem;">📷</div>`}
+                <div>
+                  <div style="font-weight:600; font-size:0.95rem;">${item.title}</div>
+                  <div style="font-size:0.75rem; color:var(--text-muted);">${item.category_name}</div>
+                </div>
+              </div>
+            </td>
+            <td><span class="item-badge-type ${typeBadge}" style="position:static; padding:2px 8px; font-size:0.7rem;">${item.type}</span></td>
+            <td>${formatDate(item.item_date)}</td>
+            <td style="font-size:0.85rem; color:var(--text-secondary);">${item.location || 'Unknown'}</td>
+            <td><span class="item-status-badge ${statusClass}">${item.status}</span></td>
+            <td style="text-align:right;">
+              <div class="d-flex gap-1" style="justify-content: flex-end;">
+                <a href="/search.html?id=${item.id}" class="btn btn-secondary" style="padding:4px 8px; font-size:0.75rem;">View</a>
+                ${item.status !== 'claimed' ? `<button class="btn btn-primary" onclick="updatePostStatus(${item.id}, 'claimed')" style="padding:4px 8px; font-size:0.75rem;"><span class="ico-check"></span>Claimed</button>` : ''}
+                <button class="btn btn-danger" onclick="deletePost(${item.id})" style="padding:4px 8px; font-size:0.75rem;"><span class="ico-trash"></span></button>
+              </div>
+            </td>
+          `;
+          listContainer.appendChild(row);
+        });
+
+      } catch (err) {
+        showToast('Failed to load personal postings.', 'error');
+        listContainer.innerHTML = '<tr><td colspan="6" style="text-align:center; color:red; padding:3rem;">Error loading postings.</td></tr>';
+      }
+    }
+
+    // Load notifications from system
+    async function loadNotifications() {
+      const container = document.getElementById('notifications-list');
+      try {
+        const notifs = await apiCall('/notifications');
+        container.innerHTML = '';
+
+        // Update badge count
+        const unreadCount = notifs.filter(n => !n.is_read).length;
+        const badge = document.getElementById('notif-badge');
+        if (unreadCount > 0) {
+          badge.textContent = unreadCount;
+          badge.style.display = 'inline-block';
+        } else {
+          badge.style.display = 'none';
+        }
+
+        if (!notifs || notifs.length === 0) {
+          container.innerHTML = `
+            <div style="text-align:center; padding:4rem; color:var(--text-muted);" class="glass-panel">
+              <p style="font-size:1.1rem; margin-bottom:8px;">No notifications yet</p>
+              <p style="font-size:0.85rem;">When our match engine correlates matching listings, you will be notified here.</p>
+            </div>
+          `;
+          return;
+        }
+
+        notifs.forEach(notif => {
+          const card = document.createElement('div');
+          card.className = `notification-card glass-panel ${notif.is_read ? '' : 'unread'}`;
+          
+          card.innerHTML = `
+            <div>
+              <div class="notification-msg">${notif.message}</div>
+              <div class="notification-date">${formatDate(notif.created_at)}</div>
+            </div>
+            <div class="d-flex gap-2">
+              <a href="/search.html?id=${notif.item_id}" class="btn btn-secondary" style="padding:4px 8px; font-size:0.75rem;">View Match</a>
+              ${!notif.is_read ? `<button class="btn btn-outline" onclick="markRead(${notif.id})" style="padding:4px 8px; font-size:0.75rem;">Mark Read</button>` : ''}
+            </div>
+          `;
+          container.appendChild(card);
+        });
+
+      } catch (err) {
+        showToast('Failed to load notifications.', 'error');
+      }
+    }
+
+    // Toggle actions
+    async function updatePostStatus(postId, newStatus) {
+      if (!confirm(`Are you sure you want to mark this item as "${newStatus}"?`)) return;
+      try {
+        await apiCall(`/items/${postId}/status`, {
+          method: 'PUT',
+          body: { status: newStatus }
+        });
+        showToast('Status updated successfully.', 'success');
+        loadUserPostings();
+        updateNotificationCount();
+      } catch (err) {
+        showToast(err.message, 'error');
+      }
+    }
+
+    async function deletePost(postId) {
+      if (!confirm('Are you sure you want to delete this report posting?')) return;
+      try {
+        await apiCall(`/items/${postId}`, { method: 'DELETE' });
+        showToast('Posting deleted successfully.', 'success');
+        loadUserPostings();
+      } catch (err) {
+        showToast(err.message, 'error');
+      }
+    }
+
+    async function markRead(notifId) {
+      try {
+        await apiCall(`/notifications/${notifId}/read`, { method: 'PUT' });
+        loadNotifications();
+      } catch (err) {
+        showToast(err.message, 'error');
+      }
+    }
+
+    // Mark all notifications read
+    document.getElementById('btn-mark-all-read').addEventListener('click', async () => {
+      try {
+        await apiCall('/notifications/read-all', { method: 'PUT' });
+        showToast('All notifications marked as read.', 'success');
+        loadNotifications();
+      } catch (err) {
+        showToast(err.message, 'error');
+      }
+    });
+
+    // Quick helper to poll count on menu load
+    async function updateNotificationCount() {
+      try {
+        const notifs = await apiCall('/notifications');
+        const unreadCount = notifs.filter(n => !n.is_read).length;
+        const badge = document.getElementById('notif-badge');
+        if (unreadCount > 0) {
+          badge.textContent = unreadCount;
+          badge.style.display = 'inline-block';
+        } else {
+          badge.style.display = 'none';
+        }
+      } catch (err) {
+        // fail silently
+      }
+    }
+
+    document.addEventListener('DOMContentLoaded', () => {
+      loadProfile();
+      loadUserPostings();
+      updateNotificationCount();
+    });
+  </script>
+</body>
+</html>

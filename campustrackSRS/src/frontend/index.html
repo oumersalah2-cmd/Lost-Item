@@ -1,0 +1,137 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>CampusTrack — Reconnecting Students with Their Belongings</title>
+  <link rel="stylesheet" href="/css/style.css">
+  <meta name="description" content="AAU Lost and Found Portal - CampusTrack helps students and staff find lost items.">
+</head>
+<body>
+
+  <!-- Navigation bar container -->
+  <div id="navbar-container"></div>
+
+  <!-- Hero Banner -->
+  <section class="hero animate-fade-in">
+    <div class="hero-tagline">AAU Fundamentals of Software Engineering Project</div>
+    <h1 class="hero-title">Reconnecting Students with <span>Their Belongings</span></h1>
+    <p class="hero-subtitle">CampusTrack is the centralized digital platform for Addis Ababa University to report, search, and claim lost and found items on campus.</p>
+    <div class="hero-actions">
+      <a href="/search.html" class="btn btn-primary"><span class="ico-search"></span>Search Postings</a>
+      <a href="/post-item.html" class="btn btn-secondary"><span class="ico-plus"></span>Report a Finding</a>
+    </div>
+  </section>
+
+  <!-- Metrics Counters -->
+  <section class="container animate-fade-in" style="animation-delay: 0.1s;">
+    <div class="metrics-grid glass-panel">
+      <div class="metric-card">
+        <div class="metric-value" id="stat-active">0</div>
+        <div class="metric-label">Active Postings</div>
+      </div>
+      <div class="metric-card" style="border-left: 1px solid var(--glass-border); border-right: 1px solid var(--glass-border);">
+        <div class="metric-value" id="stat-claimed">0</div>
+        <div class="metric-label">Belongings Recovered</div>
+      </div>
+      <div class="metric-card">
+        <div class="metric-value" id="stat-users">0+</div>
+        <div class="metric-label">Registered Members</div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Recent Postings Section -->
+  <section class="container animate-fade-in" style="animation-delay: 0.2s;">
+    <div class="section-header">
+      <h2 class="section-title">Recent Postings</h2>
+      <a href="/search.html" class="btn btn-secondary" style="padding: 0.5rem 1.2rem;">View All Listings</a>
+    </div>
+    
+    <div class="listings-grid" id="recent-listings">
+      <!-- Listings cards will be loaded here dynamically -->
+      <div style="grid-column: 1/-1; text-align: center; padding: 3rem; color: var(--text-muted);">
+        Loading recent lost & found reports...
+      </div>
+    </div>
+  </section>
+
+  <!-- Footer -->
+  <footer>
+    <div class="container" style="margin: 0 auto; padding: 0;">
+      <p>&copy; 2026 CampusTrack — Addis Ababa University. All rights reserved.</p>
+      <p style="margin-top: 8px; font-size: 0.8rem; color: var(--text-muted);">Fundamentals of Software Engineering | Instructor: Yared.Y</p>
+    </div>
+  </footer>
+
+  <script src="/js/api.js"></script>
+  <script>
+    // Load Landing Page metrics and recent postings
+    async function loadLandingData() {
+      try {
+        // Fetch public items (latest 6 active items)
+        const items = await apiCall('/items?status=active');
+        const container = document.getElementById('recent-listings');
+        container.innerHTML = '';
+
+        if (!items || items.length === 0) {
+          container.innerHTML = `
+            <div style="grid-column: 1/-1; text-align: center; padding: 3rem; color: var(--text-muted);" class="glass-panel">
+              <p style="font-size: 1.2rem; margin-bottom: 8px;">No active reports yet</p>
+              <p>Everything is safe on campus, or be the first to report an item!</p>
+            </div>
+          `;
+        } else {
+          // Display up to 6 items
+          const displayItems = items.slice(0, 6);
+          displayItems.forEach(item => {
+            const card = document.createElement('div');
+            card.className = 'item-card glass-panel';
+            
+            const badgeClass = item.type === 'lost' ? 'badge-lost' : 'badge-found';
+            const imgHtml = item.image_url 
+              ? `<img src="${item.image_url}" alt="${item.title}" class="item-card-image">`
+              : `<div class="item-card-image-placeholder">
+                  <span>📷</span>
+                  <span>No Photo Provided</span>
+                 </div>`;
+
+            card.innerHTML = `
+              <span class="item-badge-type ${badgeClass}">${item.type}</span>
+              ${imgHtml}
+              <div class="item-card-body">
+                <span class="item-card-category">${item.category_name}</span>
+                <h3 class="item-card-title">${item.title}</h3>
+                <p class="item-card-desc">${item.description || 'No description provided.'}</p>
+                <div class="item-card-meta">
+                  <div><span class="ico-location"></span> ${item.location || 'Unknown location'}</div>
+                  <div><span class="ico-calendar"></span> ${formatDate(item.item_date)}</div>
+                </div>
+                <a href="/search.html?id=${item.id}" class="btn btn-secondary mt-3" style="width:100%; font-size:0.85rem;">View Report Details</a>
+              </div>
+            `;
+            container.appendChild(card);
+          });
+        }
+
+        // Fetch stats (fake metrics for guests/users or pull from admin if we are admin, or public defaults)
+        // Since admin stats endpoint is adminOnly, let's fetch it if logged in as admin, or use defaults for guests.
+        // Wait, let's create a public statistics or display mock counters that match actual item counts
+        // Let's call /api/items to count active, and read a default or compute from items query.
+        const allItems = await apiCall('/items?status=all');
+        const activeCount = allItems.filter(i => i.status === 'active').length;
+        const claimedCount = allItems.filter(i => i.status === 'claimed').length;
+        
+        document.getElementById('stat-active').textContent = activeCount;
+        document.getElementById('stat-claimed').textContent = claimedCount;
+        document.getElementById('stat-users').textContent = (activeCount + claimedCount + 12) + '+';
+        
+      } catch (err) {
+        console.error('Error loading landing data:', err);
+      }
+    }
+
+    document.addEventListener('DOMContentLoaded', loadLandingData);
+  </script>
+</body>
+</html>

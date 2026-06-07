@@ -36,6 +36,7 @@ logs/
 # ── Uploads (user-uploaded files) ─────────
 src/uploads/
 public/uploads/
+src/backend/uploads/
 
 # ── PHP ───────────────────────────────────
 vendor/

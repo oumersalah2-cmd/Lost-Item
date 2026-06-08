@@ -8,7 +8,8 @@ if (!fs.existsSync(dbDir)) {
   fs.mkdirSync(dbDir, { recursive: true });
 }
 
-const dbPath = path.join(dbDir, 'campustrack.db');
+const dbName = process.env.NODE_ENV === 'test' ? 'campustrack_test.db' : 'campustrack.db';
+const dbPath = path.join(dbDir, dbName);
 const schemaPath = path.join(dbDir, 'schema.sql');
 
 const db = new sqlite3.Database(dbPath, (err) => {

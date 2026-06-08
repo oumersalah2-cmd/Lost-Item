@@ -8,6 +8,18 @@ process.env.NODE_ENV = 'test';
 
 const { exec } = require('child_process');
 const path = require('path');
+const fs = require('fs');
+
+// Clean up old test database file if it exists to ensure a fresh run
+const testDbPath = path.join(__dirname, '..', 'src', 'database', 'campustrack_test.db');
+if (fs.existsSync(testDbPath)) {
+  try {
+    fs.unlinkSync(testDbPath);
+    console.log('Successfully cleaned up old test database.');
+  } catch (error) {
+    console.error('Warning: Failed to clean up old test database:', error.message);
+  }
+}
 
 // Dynamically start server
 console.log('Starting CampusTrack server on port 3001 for integration testing...');

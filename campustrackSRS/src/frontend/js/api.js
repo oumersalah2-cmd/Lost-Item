@@ -52,19 +52,22 @@ function showToast(message, type = 'info') {
   const toast = document.createElement('div');
   toast.className = `toast toast-${type} glass-panel`;
   
-  let emoji = 'ℹ️';
-  if (type === 'success') emoji = '✅';
-  if (type === 'error') emoji = '❌';
+  let iconName = 'info';
+  if (type === 'success') iconName = 'check-circle';
+  if (type === 'error') iconName = 'alert-triangle';
 
   toast.innerHTML = `
     <span class="d-flex align-center gap-1">
-      <span>${emoji}</span>
+      <i data-lucide="${iconName}"></i>
       <span class="toast-msg">${message}</span>
     </span>
     <button class="toast-close">&times;</button>
   `;
 
   container.appendChild(toast);
+  if (typeof lucide !== 'undefined') {
+    lucide.createIcons();
+  }
 
   // Close event listener
   toast.querySelector('.toast-close').addEventListener('click', () => {
@@ -138,9 +141,9 @@ function initNavbar() {
   let rightNavLinks = '';
   if (auth) {
     rightNavLinks = `
-      <li><a href="/dashboard.html" class="d-flex align-center gap-1"><span class="ico-user"></span>Dashboard</a></li>
-      ${adminRole ? '<li><a href="/admin.html" class="d-flex align-center gap-1"><span class="ico-shield"></span>Admin</a></li>' : ''}
-      <li><a href="#" id="logout-link" class="d-flex align-center gap-1"><span class="ico-signout"></span>Logout</a></li>
+      <li><a href="/dashboard.html" class="d-flex align-center gap-1"><i data-lucide="user"></i>Dashboard</a></li>
+      ${adminRole ? '<li><a href="/admin.html" class="d-flex align-center gap-1"><i data-lucide="shield"></i>Admin</a></li>' : ''}
+      <li><a href="#" id="logout-link" class="d-flex align-center gap-1"><i data-lucide="log-out"></i>Logout</a></li>
     `;
   } else {
     rightNavLinks = `
@@ -157,11 +160,15 @@ function initNavbar() {
       <ul class="nav-links">
         <li><a href="/">Home</a></li>
         <li><a href="/search.html">Search Listings</a></li>
-        ${auth ? `<li><a href="/post-item.html" class="btn btn-outline" style="padding: 0.4rem 1rem;"><span class="ico-plus"></span>Report Item</a></li>` : ''}
+        ${auth ? `<li><a href="/post-item.html" class="btn btn-outline" style="padding: 0.4rem 1rem;"><i data-lucide="plus"></i>Report Item</a></li>` : ''}
         ${rightNavLinks}
       </ul>
     </nav>
   `;
+
+  if (typeof lucide !== 'undefined') {
+    lucide.createIcons();
+  }
 
   // Attach logout handler
   const logoutBtn = document.getElementById('logout-link');
@@ -204,4 +211,7 @@ function formatDate(dateStr) {
 // Run navbar setup on page load
 document.addEventListener('DOMContentLoaded', () => {
   initNavbar();
+  if (typeof lucide !== 'undefined') {
+    lucide.createIcons();
+  }
 });

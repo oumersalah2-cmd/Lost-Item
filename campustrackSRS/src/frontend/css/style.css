@@ -918,19 +918,88 @@ nav.navbar {
 .gap-1 { gap: 8px; }
 .gap-2 { gap: 16px; }
 
-/* Fontawesome CDN simulation for simple text tags */
-.ico-location::before { content: '📍 '; }
-.ico-calendar::before { content: '📅 '; }
-.ico-user::before { content: '👤 '; }
-.ico-tag::before { content: '🏷️ '; }
-.ico-bell::before { content: '🔔 '; }
-.ico-search::before { content: '🔍 '; }
-.ico-shield::before { content: '🛡️ '; }
-.ico-plus::before { content: '➕ '; }
-.ico-signout::before { content: '🚪 '; }
-.ico-trash::before { content: '🗑️ '; }
-.ico-check::before { content: '✅ '; }
-.ico-ban::before { content: '🚫 '; }
+/* Lucide SVG Icons Integration & Professional Styling */
+svg.lucide, i[data-lucide] {
+  width: 18px;
+  height: 18px;
+  stroke-width: 2px;
+  display: inline-flex;
+  align-self: center;
+  vertical-align: middle;
+  flex-shrink: 0;
+  stroke: currentColor;
+  fill: none;
+}
+
+/* Button & Nav link icon alignments */
+.btn svg.lucide, .btn i[data-lucide] {
+  margin-right: 6px;
+}
+
+.nav-links svg.lucide, .nav-links i[data-lucide] {
+  margin-right: 4px;
+}
+
+.sidebar-menu-btn svg.lucide, .sidebar-menu-btn i[data-lucide] {
+  margin-right: 10px;
+}
+
+.item-card-meta svg.lucide {
+  color: var(--accent-cyan);
+  width: 14px;
+  height: 14px;
+  margin-right: 6px;
+}
+
+/* Modal Animations */
+@keyframes scaleUp {
+  from {
+    transform: scale(0.95);
+    opacity: 0;
+  }
+  to {
+    transform: scale(1);
+    opacity: 1;
+  }
+}
+
+.modal-content.animate-fade-in {
+  animation: scaleUp 0.3s cubic-bezier(0.34, 1.56, 0.64, 1) forwards;
+}
+
+/* Modern Pill Badges for categories and statuses */
+.item-badge-type {
+  border-radius: 6px !important;
+  font-family: var(--font-display);
+}
+
+.item-status-badge {
+  border-radius: 6px !important;
+  padding: 4px 10px !important;
+  letter-spacing: 0.5px;
+}
+
+/* Card hover glow states matching lost/found type */
+.item-card.lost-card-hover:hover {
+  border-color: rgba(239, 68, 68, 0.4);
+  box-shadow: 0 20px 40px -15px rgba(239, 68, 68, 0.25);
+}
+
+.item-card.found-card-hover:hover {
+  border-color: rgba(16, 185, 129, 0.4);
+  box-shadow: 0 20px 40px -15px rgba(16, 185, 129, 0.25);
+}
+
+/* Soft Placeholder Gradients based on categories */
+.placeholder-cat-1 { background: linear-gradient(135deg, rgba(99, 102, 241, 0.15) 0%, rgba(139, 92, 246, 0.05) 100%); } /* Electronics */
+.placeholder-cat-2 { background: linear-gradient(135deg, rgba(6, 182, 212, 0.15) 0%, rgba(99, 102, 241, 0.05) 100%); } /* Documents & ID */
+.placeholder-cat-3 { background: linear-gradient(135deg, rgba(245, 158, 11, 0.15) 0%, rgba(239, 68, 68, 0.05) 100%); } /* Keys */
+.placeholder-cat-4 { background: linear-gradient(135deg, rgba(236, 72, 153, 0.15) 0%, rgba(244, 63, 94, 0.05) 100%); } /* Clothing */
+.placeholder-cat-5 { background: linear-gradient(135deg, rgba(16, 185, 129, 0.15) 0%, rgba(6, 182, 212, 0.05) 100%); } /* Books & Stationery */
+.placeholder-cat-6 { background: linear-gradient(135deg, rgba(139, 92, 246, 0.15) 0%, rgba(236, 72, 153, 0.05) 100%); } /* Bags & Wallets */
+.placeholder-cat-7 { background: linear-gradient(135deg, rgba(59, 130, 246, 0.15) 0%, rgba(99, 102, 241, 0.05) 100%); } /* Sports */
+.placeholder-cat-8 { background: linear-gradient(135deg, rgba(100, 116, 139, 0.15) 0%, rgba(148, 163, 184, 0.05) 100%); } /* Other */
+
 
 /* Footer */
 footer {

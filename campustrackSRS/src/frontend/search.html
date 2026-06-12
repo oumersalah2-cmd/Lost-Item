@@ -5,6 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Search Listings — CampusTrack</title>
   <link rel="stylesheet" href="/css/style.css">
+  <script src="https://unpkg.com/lucide@latest"></script>
   <style>
     /* Details Modal styling */
     .modal-backdrop {
@@ -111,7 +112,7 @@
             <input type="date" id="filter-end-date" class="form-control">
           </div>
 
-          <button type="submit" class="btn btn-primary" style="width: 100%;"><span class="ico-search"></span>Search</button>
+          <button type="submit" class="btn btn-primary" style="width: 100%;"><i data-lucide="search"></i>Search</button>
         </div>
       </form>
     </div>
@@ -197,6 +198,7 @@
         items.forEach(item => {
           const card = document.createElement('div');
           card.className = 'item-card glass-panel';
+          card.className = `item-card glass-panel ${item.type === 'lost' ? 'lost-card-hover' : 'found-card-hover'}`;
           card.style.cursor = 'pointer';
           
           const badgeClass = item.type === 'lost' ? 'badge-lost' : 'badge-found';
@@ -204,9 +206,9 @@
           
           const imgHtml = item.image_url 
             ? `<img src="${item.image_url}" alt="${item.title}" class="item-card-image">`
-            : `<div class="item-card-image-placeholder">
-                <span>📷</span>
-                <span>No Photo Provided</span>
+            : `<div class="item-card-image-placeholder placeholder-cat-${item.category_id || 8}">
+                <i data-lucide="image" style="width: 32px; height: 32px; stroke-width: 1.5px; margin-bottom: 8px; opacity: 0.6;"></i>
+                <span style="font-size: 0.8rem; font-weight: 500; opacity: 0.7;">No Image Available</span>
                </div>`;
 
           card.innerHTML = `
@@ -220,8 +222,8 @@
               <h3 class="item-card-title">${item.title}</h3>
               <p class="item-card-desc">${item.description || 'No description provided.'}</p>
               <div class="item-card-meta">
-                <div><span class="ico-location"></span> ${item.location || 'Unknown location'}</div>
-                <div><span class="ico-calendar"></span> ${formatDate(item.item_date)}</div>
+                <div><i data-lucide="map-pin"></i> ${item.location || 'Unknown location'}</div>
+                <div><i data-lucide="calendar"></i> ${formatDate(item.item_date)}</div>
               </div>
             </div>
           `;
@@ -232,6 +234,10 @@
 
           resultsContainer.appendChild(card);
         });
+
+        if (typeof lucide !== 'undefined') {
+          lucide.createIcons();
+        }
 
       } catch (err) {
         showToast('Failed to execute search query.', 'error');
@@ -253,9 +259,9 @@
 
         const imgHtml = item.image_url 
           ? `<div class="detail-image-box"><img src="${item.image_url}" alt="${item.title}" class="detail-image"></div>`
-          : `<div class="item-card-image-placeholder" style="height: 350px; border-radius: var(--radius-lg);">
-              <span style="font-size: 3rem;">📷</span>
-              <span>No Image Available</span>
+          : `<div class="item-card-image-placeholder placeholder-cat-${item.category_id || 8}" style="height: 350px; border-radius: var(--radius-lg); display: flex; align-items: center; justify-content: center; flex-direction: column;">
+              <i data-lucide="image" style="width: 48px; height: 48px; opacity: 0.5; margin-bottom: 12px;"></i>
+              <span style="opacity: 0.7;">No Image Available</span>
              </div>`;
 
         // Render contact information privacy logic
@@ -264,7 +270,9 @@
         if (auth) {
           contactHtml = `
             <div class="glass-panel" style="padding: 1.5rem; border-color: rgba(99,102,241,0.2); background: rgba(99,102,241,0.02); margin-top: 1.5rem;">
-              <h4 style="margin-bottom: 8px; font-family: var(--font-display); font-weight: 700; color: #fff;">📞 Contact Information</h4>
+              <h4 style="margin-bottom: 8px; font-family: var(--font-display); font-weight: 700; color: #fff; display: flex; align-items: center; gap: 8px;">
+                <i data-lucide="phone" style="color: var(--accent-cyan);"></i> Contact Information
+              </h4>
               <p style="font-size:0.95rem; color: var(--text-secondary); margin-bottom: 6px;">Reported by: <strong>${item.reporter_name}</strong></p>
               <p style="font-size:0.95rem;">Email Address: <a href="mailto:${item.reporter_email}" style="color: var(--accent-cyan); font-weight:600;">${item.reporter_email}</a></p>
               <p style="font-size:0.8rem; color: var(--text-muted); margin-top: 8px;">Please reach out to arrange safe handover in a public campus space.</p>
@@ -273,7 +281,9 @@
         } else {
           contactHtml = `
             <div class="glass-panel" style="padding: 1.5rem; border-color: rgba(239,68,68,0.2); background: rgba(239,68,68,0.02); margin-top: 1.5rem; text-align: center;">
-              <h4 style="margin-bottom: 8px; color: #f87171;">🚫 Contact Details Locked</h4>
+              <h4 style="margin-bottom: 8px; color: #f87171; display: flex; align-items: center; justify-content: center; gap: 8px;">
+                <i data-lucide="lock"></i> Contact Details Locked
+              </h4>
               <p style="font-size:0.88rem; color: var(--text-secondary); margin-bottom: 12px;">Only logged in students and staff can view reporter details.</p>
               <a href="/login.html" class="btn btn-secondary" style="padding:0.4rem 1.2rem; font-size:0.8rem;">Login to View Contacts</a>
             </div>
@@ -286,11 +296,13 @@
         if (currentUser && (currentUser.id === item.user_id || currentUser.role === 'admin')) {
           actionButtonsHtml = `
             <div class="glass-panel" style="padding: 1.5rem; margin-top: 1.5rem; border-color: var(--glass-border);">
-              <h4 style="margin-bottom: 12px; font-family: var(--font-display); font-weight:700;">⚙️ Manage Your Posting</h4>
+              <h4 style="margin-bottom: 12px; font-family: var(--font-display); font-weight:700; display: flex; align-items: center; gap: 8px;">
+                <i data-lucide="settings"></i> Manage Your Posting
+              </h4>
               <div class="hero-actions" style="justify-content: flex-start; gap: 12px;">
-                ${item.status !== 'claimed' ? `<button class="btn btn-primary" onclick="changeStatus(${item.id}, 'claimed')" style="padding: 0.5rem 1rem; font-size: 0.85rem;"><span class="ico-check"></span>Mark Claimed</button>` : ''}
+                ${item.status !== 'claimed' ? `<button class="btn btn-primary" onclick="changeStatus(${item.id}, 'claimed')" style="padding: 0.5rem 1rem; font-size: 0.85rem;"><i data-lucide="check"></i>Mark Claimed</button>` : ''}
                 ${item.status !== 'closed' ? `<button class="btn btn-outline" onclick="changeStatus(${item.id}, 'closed')" style="padding: 0.5rem 1rem; font-size: 0.85rem;">Close Report</button>` : ''}
-                <button class="btn btn-danger" onclick="deletePosting(${item.id})" style="padding: 0.5rem 1rem; font-size: 0.85rem;"><span class="ico-trash"></span>Delete</button>
+                <button class="btn btn-danger" onclick="deletePosting(${item.id})" style="padding: 0.5rem 1rem; font-size: 0.85rem;"><i data-lucide="trash-2"></i>Delete</button>
               </div>
             </div>
           `;
@@ -331,6 +343,10 @@
             </div>
           </div>
         `;
+
+        if (typeof lucide !== 'undefined') {
+          lucide.createIcons();
+        }
 
       } catch (err) {
         body.innerHTML = `<div style="padding:4rem; text-align:center; color:red;">Failed to retrieve details: ${err.message}</div>`;

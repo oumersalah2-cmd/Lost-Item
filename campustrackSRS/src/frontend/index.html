@@ -5,6 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>CampusTrack — Reconnecting Students with Their Belongings</title>
   <link rel="stylesheet" href="/css/style.css">
+  <script src="https://unpkg.com/lucide@latest"></script>
   <meta name="description" content="AAU Lost and Found Portal - CampusTrack helps students and staff find lost items.">
 </head>
 <body>
@@ -18,8 +19,8 @@
     <h1 class="hero-title">Reconnecting Students with <span>Their Belongings</span></h1>
     <p class="hero-subtitle">CampusTrack is the centralized digital platform for Addis Ababa University to report, search, and claim lost and found items on campus.</p>
     <div class="hero-actions">
-      <a href="/search.html" class="btn btn-primary"><span class="ico-search"></span>Search Postings</a>
-      <a href="/post-item.html" class="btn btn-secondary"><span class="ico-plus"></span>Report a Finding</a>
+      <a href="/search.html" class="btn btn-primary"><i data-lucide="search"></i>Search Postings</a>
+      <a href="/post-item.html" class="btn btn-secondary"><i data-lucide="plus"></i>Report a Finding</a>
     </div>
   </section>
 
@@ -86,14 +87,14 @@
           const displayItems = items.slice(0, 6);
           displayItems.forEach(item => {
             const card = document.createElement('div');
-            card.className = 'item-card glass-panel';
+            card.className = `item-card glass-panel ${item.type === 'lost' ? 'lost-card-hover' : 'found-card-hover'}`;
             
             const badgeClass = item.type === 'lost' ? 'badge-lost' : 'badge-found';
             const imgHtml = item.image_url 
               ? `<img src="${item.image_url}" alt="${item.title}" class="item-card-image">`
-              : `<div class="item-card-image-placeholder">
-                  <span>📷</span>
-                  <span>No Photo Provided</span>
+              : `<div class="item-card-image-placeholder placeholder-cat-${item.category_id || 8}">
+                  <i data-lucide="image" style="width: 32px; height: 32px; stroke-width: 1.5px; margin-bottom: 8px; opacity: 0.6;"></i>
+                  <span style="font-size: 0.8rem; font-weight: 500; opacity: 0.7;">No Image Available</span>
                  </div>`;
 
             card.innerHTML = `
@@ -104,8 +105,8 @@
                 <h3 class="item-card-title">${item.title}</h3>
                 <p class="item-card-desc">${item.description || 'No description provided.'}</p>
                 <div class="item-card-meta">
-                  <div><span class="ico-location"></span> ${item.location || 'Unknown location'}</div>
-                  <div><span class="ico-calendar"></span> ${formatDate(item.item_date)}</div>
+                  <div><i data-lucide="map-pin"></i> ${item.location || 'Unknown location'}</div>
+                  <div><i data-lucide="calendar"></i> ${formatDate(item.item_date)}</div>
                 </div>
                 <a href="/search.html?id=${item.id}" class="btn btn-secondary mt-3" style="width:100%; font-size:0.85rem;">View Report Details</a>
               </div>
@@ -128,6 +129,10 @@
         
       } catch (err) {
         console.error('Error loading landing data:', err);
+      } finally {
+        if (typeof lucide !== 'undefined') {
+          lucide.createIcons();
+        }
       }
     }
 

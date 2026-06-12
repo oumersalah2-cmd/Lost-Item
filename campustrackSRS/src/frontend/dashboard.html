@@ -5,6 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>User Dashboard — CampusTrack</title>
   <link rel="stylesheet" href="/css/style.css">
+  <script src="https://unpkg.com/lucide@latest"></script>
 </head>
 <body>
 
@@ -25,17 +26,17 @@
         <ul class="sidebar-menu">
           <li>
             <button class="sidebar-menu-btn active" id="btn-show-posts">
-              📁 My Postings
+              <i data-lucide="folder"></i> My Postings
             </button>
           </li>
           <li>
             <button class="sidebar-menu-btn" id="btn-show-notifs">
-              🔔 Notifications <span id="notif-badge" style="background:#8b5cf6; color:#fff; font-size:0.75rem; padding: 2px 8px; border-radius:10px; margin-left:auto; display:none;">0</span>
+              <i data-lucide="bell"></i> Notifications <span id="notif-badge" style="background:#8b5cf6; color:#fff; font-size:0.75rem; padding: 2px 8px; border-radius:10px; margin-left:auto; display:none;">0</span>
             </button>
           </li>
           <li>
             <a href="/post-item.html" class="btn btn-primary mt-2" style="width: 100%; font-size: 0.88rem; padding:0.6rem;">
-              <span class="ico-plus"></span>Report Lost/Found
+              <i data-lucide="plus"></i>Report Lost/Found
             </a>
           </li>
         </ul>
@@ -162,7 +163,7 @@
           row.innerHTML = `
             <td>
               <div class="d-flex align-center gap-2">
-                ${item.image_url ? `<img src="${item.image_url}" style="width:40px; height:40px; object-fit:cover; border-radius:4px; border:1px solid var(--glass-border);">` : `<div style="width:40px; height:40px; display:flex; align-items:center; justify-content:center; background:rgba(255,255,255,0.05); border-radius:4px; font-size:1.2rem;">📷</div>`}
+                ${item.image_url ? `<img src="${item.image_url}" style="width:40px; height:40px; object-fit:cover; border-radius:4px; border:1px solid var(--glass-border);">` : `<div class="placeholder-cat-${item.category_id || 8}" style="width:40px; height:40px; display:flex; align-items:center; justify-content:center; border-radius:4px; border:1px solid var(--glass-border);"><i data-lucide="image" style="width:16px; height:16px; opacity:0.6;"></i></div>`}
                 <div>
                   <div style="font-weight:600; font-size:0.95rem;">${item.title}</div>
                   <div style="font-size:0.75rem; color:var(--text-muted);">${item.category_name}</div>
@@ -176,13 +177,17 @@
             <td style="text-align:right;">
               <div class="d-flex gap-1" style="justify-content: flex-end;">
                 <a href="/search.html?id=${item.id}" class="btn btn-secondary" style="padding:4px 8px; font-size:0.75rem;">View</a>
-                ${item.status !== 'claimed' ? `<button class="btn btn-primary" onclick="updatePostStatus(${item.id}, 'claimed')" style="padding:4px 8px; font-size:0.75rem;"><span class="ico-check"></span>Claimed</button>` : ''}
-                <button class="btn btn-danger" onclick="deletePost(${item.id})" style="padding:4px 8px; font-size:0.75rem;"><span class="ico-trash"></span></button>
+                ${item.status !== 'claimed' ? `<button class="btn btn-primary" onclick="updatePostStatus(${item.id}, 'claimed')" style="padding:4px 8px; font-size:0.75rem;"><i data-lucide="check"></i>Claimed</button>` : ''}
+                <button class="btn btn-danger" onclick="deletePost(${item.id})" style="padding:4px 8px; font-size:0.75rem;"><i data-lucide="trash-2" style="margin:0;"></i></button>
               </div>
             </td>
           `;
           listContainer.appendChild(row);
         });
+
+        if (typeof lucide !== 'undefined') {
+          lucide.createIcons();
+        }
 
       } catch (err) {
         showToast('Failed to load personal postings.', 'error');
@@ -233,6 +238,10 @@
           `;
           container.appendChild(card);
         });
+
+        if (typeof lucide !== 'undefined') {
+          lucide.createIcons();
+        }
 
       } catch (err) {
         showToast('Failed to load notifications.', 'error');

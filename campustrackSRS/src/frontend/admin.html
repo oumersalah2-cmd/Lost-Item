@@ -5,6 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Admin Moderation Portal — CampusTrack</title>
   <link rel="stylesheet" href="/css/style.css">
+  <script src="https://unpkg.com/lucide@latest"></script>
 </head>
 <body>
 
@@ -25,17 +26,17 @@
         <ul class="sidebar-menu">
           <li>
             <button class="sidebar-menu-btn active" id="btn-show-stats">
-              📊 System Statistics
+              <i data-lucide="bar-chart-2"></i> System Statistics
             </button>
           </li>
           <li>
             <button class="sidebar-menu-btn" id="btn-show-users">
-              👤 User Accounts
+              <i data-lucide="users"></i> User Accounts
             </button>
           </li>
           <li>
             <button class="sidebar-menu-btn" id="btn-show-moderation">
-              🛡️ Moderate Postings
+              <i data-lucide="shield"></i> Moderate Postings
             </button>
           </li>
         </ul>
@@ -221,8 +222,8 @@
           let actionBtn = '';
           if (user.role !== 'admin') {
             actionBtn = user.is_active 
-              ? `<button class="btn btn-danger" onclick="toggleUserActivation(${user.id}, 0)" style="padding:4px 8px; font-size:0.75rem;"><span class="ico-ban"></span> Suspend</button>`
-              : `<button class="btn btn-primary" onclick="toggleUserActivation(${user.id}, 1)" style="padding:4px 8px; font-size:0.75rem;"><span class="ico-check"></span> Activate</button>`;
+              ? `<button class="btn btn-danger" onclick="toggleUserActivation(${user.id}, 0)" style="padding:4px 8px; font-size:0.75rem;"><i data-lucide="ban"></i> Suspend</button>`
+              : `<button class="btn btn-primary" onclick="toggleUserActivation(${user.id}, 1)" style="padding:4px 8px; font-size:0.75rem;"><i data-lucide="check"></i> Activate</button>`;
           } else {
             actionBtn = `<span style="font-size:0.75rem; color:var(--text-muted);">Self</span>`;
           }
@@ -237,6 +238,10 @@
           `;
           tbody.appendChild(row);
         });
+
+        if (typeof lucide !== 'undefined') {
+          lucide.createIcons();
+        }
 
       } catch (err) {
         showToast('Failed to load user records.', 'error');
@@ -282,7 +287,7 @@
           row.innerHTML = `
             <td>
               <div class="d-flex align-center gap-2">
-                ${item.image_url ? `<img src="${item.image_url}" style="width:40px; height:40px; object-fit:cover; border-radius:4px; border:1px solid var(--glass-border);">` : `<div style="width:40px; height:40px; display:flex; align-items:center; justify-content:center; background:rgba(255,255,255,0.05); border-radius:4px; font-size:1.2rem;">📷</div>`}
+                ${item.image_url ? `<img src="${item.image_url}" style="width:40px; height:40px; object-fit:cover; border-radius:4px; border:1px solid var(--glass-border);">` : `<div class="placeholder-cat-${item.category_id || 8}" style="width:40px; height:40px; display:flex; align-items:center; justify-content:center; border-radius:4px; border:1px solid var(--glass-border);"><i data-lucide="image" style="width:16px; height:16px; opacity:0.6;"></i></div>`}
                 <div>
                   <div style="font-weight:600; font-size:0.95rem;">${item.title}</div>
                   <div style="font-size:0.75rem; color:var(--text-muted);">${item.category_name}</div>
@@ -299,12 +304,16 @@
             <td style="text-align:right;">
               <div class="d-flex gap-1" style="justify-content: flex-end;">
                 <a href="/search.html?id=${item.id}" class="btn btn-secondary" style="padding:4px 8px; font-size:0.75rem;">View</a>
-                <button class="btn btn-danger" onclick="deletePostingByAdmin(${item.id})" style="padding:4px 8px; font-size:0.75rem;"><span class="ico-trash"></span> Remove</button>
+                <button class="btn btn-danger" onclick="deletePostingByAdmin(${item.id})" style="padding:4px 8px; font-size:0.75rem;"><i data-lucide="trash-2"></i> Remove</button>
               </div>
             </td>
           `;
           tbody.appendChild(row);
         });
+
+        if (typeof lucide !== 'undefined') {
+          lucide.createIcons();
+        }
 
       } catch (err) {
         showToast('Failed to load moderation table.', 'error');

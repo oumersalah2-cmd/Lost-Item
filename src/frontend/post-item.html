@@ -1,0 +1,232 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Report Item — CampusTrack</title>
+  <link rel="stylesheet" href="/css/style.css">
+  <script src="https://unpkg.com/lucide@latest"></script>
+</head>
+<body>
+
+  <div id="navbar-container"></div>
+
+  <div class="container animate-fade-in">
+    <div style="max-width: 700px; margin: 0 auto;" class="glass-panel p-4">
+      <div style="text-align: center; margin-bottom: 2rem; padding-top: 1.5rem;">
+        <h2 class="auth-title">Report Lost or Found Belonging</h2>
+        <p class="auth-subtitle">Provide details to initiate automated matching searches</p>
+      </div>
+
+      <form id="post-item-form" style="padding: 0 1.5rem 2rem 1.5rem;">
+        <div class="form-group">
+          <label class="form-label">Report Type</label>
+          <div class="form-row">
+            <div>
+              <input type="radio" id="type-lost" name="type" value="lost" checked style="display:none;">
+              <label for="type-lost" class="btn btn-outline" id="label-lost" style="width: 100%; border-color: #ef4444; color: #f87171;">
+                <i data-lucide="alert-triangle"></i> I Lost Something
+              </label>
+            </div>
+            <div>
+              <input type="radio" id="type-found" name="type" value="found" style="display:none;">
+              <label for="type-found" class="btn btn-secondary" id="label-found" style="width: 100%;">
+                <i data-lucide="check-circle"></i> I Found Something
+              </label>
+            </div>
+          </div>
+        </div>
+
+        <div class="form-group">
+          <label class="form-label" for="title">Item Title / Name</label>
+          <input type="text" id="title" class="form-control" placeholder="e.g. Black HP Laptop, Calculus Textbook" required>
+        </div>
+
+        <div class="form-row">
+          <div class="form-group">
+            <label class="form-label" for="category">Category</label>
+            <select id="category" class="form-control" required>
+              <option value="" disabled selected>Select Category</option>
+              <!-- Populated dynamically -->
+            </select>
+          </div>
+          <div class="form-group">
+            <label class="form-label" id="date-label" for="item-date">Date Lost</label>
+            <input type="date" id="item-date" class="form-control" required>
+          </div>
+        </div>
+
+        <div class="form-group">
+          <label class="form-label" for="location">Location (Campus Zone / Building)</label>
+          <input type="text" id="location" class="form-control" placeholder="e.g. Nelson Mandela Hall Library, Block 4 Room 201" required>
+        </div>
+
+        <div class="form-group">
+          <label class="form-label" for="description">Detailed Description</label>
+          <textarea id="description" class="form-control" rows="4" placeholder="Mention key identifying details, scratches, colors, labels, stickers, lock screen layouts..."></textarea>
+        </div>
+
+        <div class="form-group mb-4">
+          <label class="form-label">Upload Photo (Optional, Max 5MB)</label>
+          <div class="file-upload-wrapper" id="file-dropzone">
+            <div class="file-upload-icon"><i data-lucide="camera" style="width: 32px; height: 32px; opacity: 0.6; margin-bottom: 8px;"></i></div>
+            <p id="file-label">Click or Drag & Drop image file (PNG/JPEG)</p>
+            <span style="font-size:0.75rem; color: var(--text-muted);">Max 5 MB size limit enforced</span>
+            <input type="file" id="image-file" accept="image/png, image/jpeg, image/jpg">
+          </div>
+        </div>
+
+        <div class="hero-actions" style="margin-top: 2rem;">
+          <button type="submit" class="btn btn-primary" style="padding: 0.8rem 2.5rem;"><i data-lucide="plus"></i>Publish Posting</button>
+          <a href="/dashboard.html" class="btn btn-secondary" style="padding: 0.8rem 2rem;">Cancel</a>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <footer>
+    <p>&copy; 2026 CampusTrack — Addis Ababa University. All rights reserved.</p>
+  </footer>
+
+  <script src="/js/api.js"></script>
+  <script>
+    // Guard: Must be authenticated
+    if (!isAuthenticated()) {
+      showToast('You must login to submit postings.', 'error');
+      setTimeout(() => window.location.href = '/login.html', 1000);
+    }
+
+    // Toggle styling between lost and found buttons
+    const radioLost = document.getElementById('type-lost');
+    const radioFound = document.getElementById('type-found');
+    const labelLost = document.getElementById('label-lost');
+    const labelFound = document.getElementById('label-found');
+    const dateLabel = document.getElementById('date-label');
+
+    radioLost.addEventListener('change', () => {
+      labelLost.className = "btn btn-outline";
+      labelLost.style.borderColor = "#ef4444";
+      labelLost.style.color = "#f87171";
+      labelLost.style.background = "transparent";
+
+      labelFound.className = "btn btn-secondary";
+      labelFound.style.borderColor = "var(--glass-border)";
+      labelFound.style.color = "var(--text-primary)";
+      dateLabel.textContent = "Date Lost";
+    });
+
+    radioFound.addEventListener('change', () => {
+      labelFound.className = "btn btn-outline";
+      labelFound.style.borderColor = "#10b981";
+      labelFound.style.color = "#34d399";
+      labelFound.style.background = "transparent";
+
+      labelLost.className = "btn btn-secondary";
+      labelLost.style.borderColor = "var(--glass-border)";
+      labelLost.style.color = "var(--text-primary)";
+      dateLabel.textContent = "Date Found";
+    });
+
+    labelLost.addEventListener('click', () => {
+      radioLost.checked = true;
+      radioLost.dispatchEvent(new Event('change'));
+    });
+
+    labelFound.addEventListener('click', () => {
+      radioFound.checked = true;
+      radioFound.dispatchEvent(new Event('change'));
+    });
+
+    // Handle Dropzone Upload interface
+    const dropzone = document.getElementById('file-dropzone');
+    const fileInput = document.getElementById('image-file');
+    const fileLabel = document.getElementById('file-label');
+
+    dropzone.addEventListener('click', () => fileInput.click());
+
+    fileInput.addEventListener('change', () => {
+      if (fileInput.files.length > 0) {
+        const file = fileInput.files[0];
+        
+        // Size validation (5MB)
+        if (file.size > 5 * 1024 * 1024) {
+          showToast('Image file exceeds the 5MB size limit.', 'error');
+          fileInput.value = '';
+          fileLabel.textContent = 'Click or Drag & Drop image file (PNG/JPEG)';
+          return;
+        }
+
+        fileLabel.textContent = `Selected: ${file.name} (${(file.size/1024/1024).toFixed(2)} MB)`;
+      }
+    });
+
+    // Load Categories dynamic select menu
+    async function loadCategories() {
+      try {
+        const categories = await apiCall('/items/categories');
+        const select = document.getElementById('category');
+        categories.forEach(cat => {
+          const opt = document.createElement('option');
+          opt.value = cat.id;
+          opt.textContent = cat.name;
+          select.appendChild(opt);
+        });
+      } catch (err) {
+        showToast('Failed to load categories.', 'error');
+      }
+    }
+
+    // Submit form action
+    const form = document.getElementById('post-item-form');
+    form.addEventListener('submit', async (e) => {
+      e.preventDefault();
+
+      const type = document.querySelector('input[name="type"]:checked').value;
+      const title = document.getElementById('title').value;
+      const category_id = document.getElementById('category').value;
+      const item_date = document.getElementById('item-date').value;
+      const location = document.getElementById('location').value;
+      const description = document.getElementById('description').value;
+      
+      const formData = new FormData();
+      formData.append('type', type);
+      formData.append('title', title);
+      formData.append('category_id', category_id);
+      formData.append('item_date', item_date);
+      formData.append('location', location);
+      formData.append('description', description);
+
+      if (fileInput.files.length > 0) {
+        formData.append('image', fileInput.files[0]);
+      }
+
+      try {
+        showToast('Uploading and running match calculations...', 'info');
+        
+        const response = await apiCall('/items', {
+          method: 'POST',
+          body: formData
+        });
+
+        showToast(response.message || 'Report published successfully!', 'success');
+        
+        setTimeout(() => {
+          window.location.href = '/dashboard.html';
+        }, 1200);
+
+      } catch (error) {
+        showToast(error.message || 'Failed to submit post.', 'error');
+      }
+    });
+
+    document.addEventListener('DOMContentLoaded', () => {
+      loadCategories();
+      // Set default date to today
+      document.getElementById('item-date').valueAsDate = new Date();
+      if (typeof lucide !== 'undefined') {
+        lucide.createIcons();
+      }
+    });
+  </script>
+</body>
+</html>

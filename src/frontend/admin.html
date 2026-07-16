@@ -1,0 +1,340 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Admin Moderation Portal — CampusTrack</title>
+  <link rel="stylesheet" href="/css/style.css">
+  <script src="https://unpkg.com/lucide@latest"></script>
+</head>
+<body>
+
+  <div id="navbar-container"></div>
+
+  <div class="container animate-fade-in">
+    <div class="dashboard-layout">
+      
+      <!-- Sidebar Profile & Admin Menu -->
+      <aside class="dashboard-sidebar glass-panel">
+        <div class="sidebar-profile">
+          <div class="profile-avatar" style="background: var(--brand-gradient);" id="admin-avatar">A</div>
+          <h3 class="profile-name" id="admin-fullname">Loading Admin...</h3>
+          <span class="profile-role" style="color: #ef4444; border: 1px solid rgba(239,68,68,0.4); padding: 2px 8px; border-radius: 4px; font-size: 0.68rem;">ADMIN MODERATOR</span>
+          <p style="font-size:0.75rem; color: var(--text-muted); margin-top:6px;" id="admin-email">admin@aau.edu.et</p>
+        </div>
+
+        <ul class="sidebar-menu">
+          <li>
+            <button class="sidebar-menu-btn active" id="btn-show-stats">
+              <i data-lucide="bar-chart-2"></i> System Statistics
+            </button>
+          </li>
+          <li>
+            <button class="sidebar-menu-btn" id="btn-show-users">
+              <i data-lucide="users"></i> User Accounts
+            </button>
+          </li>
+          <li>
+            <button class="sidebar-menu-btn" id="btn-show-moderation">
+              <i data-lucide="shield"></i> Moderate Postings
+            </button>
+          </li>
+        </ul>
+      </aside>
+
+      <!-- Main Moderation Panel workspace -->
+      <main class="dashboard-main-content">
+        
+        <!-- Section 1: System Statistics -->
+        <section id="pane-stats" class="glass-panel p-4" style="padding: 2.5rem;">
+          <h2 class="section-title mb-3" style="font-size: 1.5rem;">Global System Analytics</h2>
+          <p style="color:var(--text-secondary); margin-bottom: 2rem;">Real-time database metrics of CampusTrack lost and found records.</p>
+          
+          <div class="metrics-grid" style="margin: 0 0 2.5rem 0;">
+            <div class="metric-card glass-panel" style="background: rgba(99,102,241,0.02);">
+              <div class="metric-value" id="count-users" style="background: linear-gradient(135deg, #fff 0%, var(--accent-indigo) 100%); -webkit-background-clip: text; -webkit-text-fill-color: transparent;">0</div>
+              <div class="metric-label">Total Users</div>
+            </div>
+            <div class="metric-card glass-panel" style="background: rgba(239,68,68,0.02);">
+              <div class="metric-value" id="count-lost" style="color: #f87171;">0</div>
+              <div class="metric-label">Lost Reports</div>
+            </div>
+            <div class="metric-card glass-panel" style="background: rgba(16,185,129,0.02);">
+              <div class="metric-value" id="count-found" style="color: #34d399;">0</div>
+              <div class="metric-label">Found Reports</div>
+            </div>
+          </div>
+
+          <div class="metrics-grid" style="margin: 0;">
+            <div class="metric-card glass-panel">
+              <div class="metric-value" id="count-active" style="color: var(--status-active-text);">0</div>
+              <div class="metric-label">Active Listing</div>
+            </div>
+            <div class="metric-card glass-panel">
+              <div class="metric-value" id="count-claimed" style="color: var(--status-claimed-text);">0</div>
+              <div class="metric-label">Claimed Matches</div>
+            </div>
+            <div class="metric-card glass-panel">
+              <div class="metric-value" id="count-closed" style="color: var(--status-closed-text);">0</div>
+              <div class="metric-label">Closed Archive</div>
+            </div>
+          </div>
+        </section>
+
+        <!-- Section 2: User Accounts Table -->
+        <section id="pane-users" class="glass-panel p-4" style="padding: 2.5rem; display:none;">
+          <h2 class="section-title mb-3" style="font-size: 1.5rem;">Registered User Profiles</h2>
+          <div class="custom-table-wrapper">
+            <table class="custom-table">
+              <thead>
+                <tr>
+                  <th>Profile Name</th>
+                  <th>Email Address</th>
+                  <th>System Role</th>
+                  <th>Created At</th>
+                  <th>Status</th>
+                  <th style="text-align:right;">Access Controls</th>
+                </tr>
+              </thead>
+              <tbody id="users-list-body">
+                <!-- User rows rendered dynamically -->
+              </tbody>
+            </table>
+          </div>
+        </section>
+
+        <!-- Section 3: Postings Moderation List -->
+        <section id="pane-moderation" class="glass-panel p-4" style="padding: 2.5rem; display:none;">
+          <h2 class="section-title mb-3" style="font-size: 1.5rem;">Content Moderation Board</h2>
+          <p style="color:var(--text-secondary); margin-bottom:1.5rem;">Review all system postings, remove spam reports, or modify post details.</p>
+          
+          <div class="custom-table-wrapper">
+            <table class="custom-table">
+              <thead>
+                <tr>
+                  <th>Report Details</th>
+                  <th>Owner</th>
+                  <th>Type</th>
+                  <th>Status</th>
+                  <th>Date</th>
+                  <th style="text-align:right;">Moderation Actions</th>
+                </tr>
+              </thead>
+              <tbody id="moderation-list-body">
+                <!-- Moderation rows loaded dynamically -->
+              </tbody>
+            </table>
+          </div>
+        </section>
+
+      </main>
+
+    </div>
+  </div>
+
+  <footer>
+    <p>&copy; 2026 CampusTrack — Addis Ababa University. All rights reserved.</p>
+  </footer>
+
+  <script src="/js/api.js"></script>
+  <script>
+    // Guard admin role access
+    if (!isAuthenticated() || !isAdmin()) {
+      showToast('Access Denied. Administrator privileges required.', 'error');
+      setTimeout(() => window.location.href = '/dashboard.html', 1500);
+    }
+
+    // Tab view logic
+    const btnStats = document.getElementById('btn-show-stats');
+    const btnUsers = document.getElementById('btn-show-users');
+    const btnModeration = document.getElementById('btn-show-moderation');
+    const paneStats = document.getElementById('pane-stats');
+    const paneUsers = document.getElementById('pane-users');
+    const paneModeration = document.getElementById('pane-moderation');
+
+    btnStats.addEventListener('click', () => {
+      toggleTabs(btnStats, paneStats);
+      loadSystemStats();
+    });
+
+    btnUsers.addEventListener('click', () => {
+      toggleTabs(btnUsers, paneUsers);
+      loadUsersTable();
+    });
+
+    btnModeration.addEventListener('click', () => {
+      toggleTabs(btnModeration, paneModeration);
+      loadModerationTable();
+    });
+
+    function toggleTabs(activeBtn, activePane) {
+      [btnStats, btnUsers, btnModeration].forEach(b => b.classList.remove('active'));
+      [paneStats, paneUsers, paneModeration].forEach(p => p.style.display = 'none');
+      
+      activeBtn.classList.add('active');
+      activePane.style.display = 'block';
+    }
+
+    // Populate admin profile
+    function initAdminProfile() {
+      const user = getUser();
+      if (user) {
+        document.getElementById('admin-fullname').textContent = user.full_name;
+        document.getElementById('admin-email').textContent = user.email;
+        document.getElementById('admin-avatar').textContent = user.full_name.charAt(0).toUpperCase();
+      }
+    }
+
+    // Load metrics
+    async function loadSystemStats() {
+      try {
+        const stats = await apiCall('/admin/stats');
+        document.getElementById('count-users').textContent = stats.totalUsers;
+        document.getElementById('count-lost').textContent = stats.totalLost;
+        document.getElementById('count-found').textContent = stats.totalFound;
+        document.getElementById('count-active').textContent = stats.totalActive;
+        document.getElementById('count-claimed').textContent = stats.totalClaimed;
+        document.getElementById('count-closed').textContent = stats.totalClosed;
+      } catch (err) {
+        showToast('Error loading stats metrics.', 'error');
+      }
+    }
+
+    // Load users list
+    async function loadUsersTable() {
+      const tbody = document.getElementById('users-list-body');
+      tbody.innerHTML = '<tr><td colspan="6" style="text-align:center; padding:2rem; color:var(--text-muted);">Fetching profiles...</td></tr>';
+      
+      try {
+        const users = await apiCall('/admin/users');
+        tbody.innerHTML = '';
+
+        if (!users || users.length === 0) {
+          tbody.innerHTML = '<tr><td colspan="6" style="text-align:center; padding:2rem;">No users found in database.</td></tr>';
+          return;
+        }
+
+        users.forEach(user => {
+          const row = document.createElement('tr');
+          const statusText = user.is_active ? 'Active' : 'Suspended';
+          const statusClass = user.is_active ? 'status-claimed' : 'status-closed';
+          
+          let actionBtn = '';
+          if (user.role !== 'admin') {
+            actionBtn = user.is_active 
+              ? `<button class="btn btn-danger" onclick="toggleUserActivation(${user.id}, 0)" style="padding:4px 8px; font-size:0.75rem;"><i data-lucide="ban"></i> Suspend</button>`
+              : `<button class="btn btn-primary" onclick="toggleUserActivation(${user.id}, 1)" style="padding:4px 8px; font-size:0.75rem;"><i data-lucide="check"></i> Activate</button>`;
+          } else {
+            actionBtn = `<span style="font-size:0.75rem; color:var(--text-muted);">Self</span>`;
+          }
+
+          row.innerHTML = `
+            <td><strong>${user.full_name}</strong></td>
+            <td>${user.email}</td>
+            <td><span style="font-size:0.75rem; text-transform:uppercase; font-weight:700;">${user.role}</span></td>
+            <td>${formatDate(user.created_at)}</td>
+            <td><span class="item-status-badge ${statusClass}">${statusText}</span></td>
+            <td style="text-align:right;">${actionBtn}</td>
+          `;
+          tbody.appendChild(row);
+        });
+
+        if (typeof lucide !== 'undefined') {
+          lucide.createIcons();
+        }
+
+      } catch (err) {
+        showToast('Failed to load user records.', 'error');
+      }
+    }
+
+    // Toggle user suspension
+    async function toggleUserActivation(userId, newStatus) {
+      const phrase = newStatus === 0 ? 'SUSPEND' : 'ACTIVATE';
+      if (!confirm(`Are you sure you want to ${phrase} this user account?`)) return;
+
+      try {
+        await apiCall(`/admin/users/${userId}/status`, {
+          method: 'PUT',
+          body: { is_active: newStatus }
+        });
+        showToast(`User status updated successfully.`, 'success');
+        loadUsersTable();
+      } catch (err) {
+        showToast(err.message, 'error');
+      }
+    }
+
+    // Load listings for moderation
+    async function loadModerationTable() {
+      const tbody = document.getElementById('moderation-list-body');
+      tbody.innerHTML = '<tr><td colspan="6" style="text-align:center; padding:2rem; color:var(--text-muted);">Fetching content board...</td></tr>';
+
+      try {
+        const items = await apiCall('/items?status=all');
+        tbody.innerHTML = '';
+
+        if (!items || items.length === 0) {
+          tbody.innerHTML = '<tr><td colspan="6" style="text-align:center; padding:2rem;">No items found.</td></tr>';
+          return;
+        }
+
+        items.forEach(item => {
+          const row = document.createElement('tr');
+          const typeBadge = item.type === 'lost' ? 'badge-lost' : 'badge-found';
+          const statusClass = item.status === 'active' ? 'status-active' : (item.status === 'claimed' ? 'status-claimed' : 'status-closed');
+
+          row.innerHTML = `
+            <td>
+              <div class="d-flex align-center gap-2">
+                ${item.image_url ? `<img src="${item.image_url}" style="width:40px; height:40px; object-fit:cover; border-radius:4px; border:1px solid var(--glass-border);">` : `<div class="placeholder-cat-${item.category_id || 8}" style="width:40px; height:40px; display:flex; align-items:center; justify-content:center; border-radius:4px; border:1px solid var(--glass-border);"><i data-lucide="image" style="width:16px; height:16px; opacity:0.6;"></i></div>`}
+                <div>
+                  <div style="font-weight:600; font-size:0.95rem;">${item.title}</div>
+                  <div style="font-size:0.75rem; color:var(--text-muted);">${item.category_name}</div>
+                </div>
+              </div>
+            </td>
+            <td>
+              <div style="font-size:0.85rem; font-weight:500;">${item.reporter_name}</div>
+              <div style="font-size:0.7rem; color:var(--text-muted);">ID: ${item.user_id}</div>
+            </td>
+            <td><span class="item-badge-type ${typeBadge}" style="position:static; padding:2px 8px; font-size:0.7rem;">${item.type}</span></td>
+            <td><span class="item-status-badge ${statusClass}">${item.status}</span></td>
+            <td>${formatDate(item.item_date)}</td>
+            <td style="text-align:right;">
+              <div class="d-flex gap-1" style="justify-content: flex-end;">
+                <a href="/search.html?id=${item.id}" class="btn btn-secondary" style="padding:4px 8px; font-size:0.75rem;">View</a>
+                <button class="btn btn-danger" onclick="deletePostingByAdmin(${item.id})" style="padding:4px 8px; font-size:0.75rem;"><i data-lucide="trash-2"></i> Remove</button>
+              </div>
+            </td>
+          `;
+          tbody.appendChild(row);
+        });
+
+        if (typeof lucide !== 'undefined') {
+          lucide.createIcons();
+        }
+
+      } catch (err) {
+        showToast('Failed to load moderation table.', 'error');
+      }
+    }
+
+    async function deletePostingByAdmin(itemId) {
+      if (!confirm('Are you sure you want to remove this posting by administrative override?')) return;
+      try {
+        await apiCall(`/items/${itemId}`, { method: 'DELETE' });
+        showToast('Posting deleted successfully.', 'success');
+        loadModerationTable();
+      } catch (err) {
+        showToast(err.message, 'error');
+      }
+    }
+
+    document.addEventListener('DOMContentLoaded', () => {
+      initAdminProfile();
+      loadSystemStats();
+    });
+  </script>
+</body>
+</html>
